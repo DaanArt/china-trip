@@ -1,21 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { useTrip } from '../../data/TripDataProvider'
-import { linkify, rankActivities, type RankedActivity } from '../../domain/activities'
+import { rankActivities, type RankedActivity } from '../../domain/activities'
+import { Comments } from './Comments'
+import { LinkedText } from './LinkedText'
 import { Reservations } from './Reservations'
-
-function Notes({ text }: { text: string }) {
-  return (
-    <p className="small pre">
-      {linkify(text).map((seg, i) =>
-        'href' in seg ? (
-          <a key={i} href={seg.href} target="_blank" rel="noopener noreferrer">{seg.text}</a>
-        ) : (
-          <span key={i}>{seg.text}</span>
-        ),
-      )}
-    </p>
-  )
-}
 
 const hearts = (n: number) => '♥'.repeat(n) + '♡'.repeat(3 - n)
 
@@ -75,10 +63,11 @@ function ActivityCard({ ranked }: { ranked: RankedActivity }) {
           onCancel={() => setEditing(false)}
         />
       ) : (
-        activity.notes && <Notes text={activity.notes} />
+        activity.notes && <LinkedText text={activity.notes} />
       )}
       {error && <p className="error" role="alert">{error}</p>}
       <Reservations target={{ activity }} />
+      <Comments target={{ activity_id: activity.id }} />
       <div className="row spread">
         <span className="muted small">added by {nameOf(activity.created_by)}</span>
         <span className="row">

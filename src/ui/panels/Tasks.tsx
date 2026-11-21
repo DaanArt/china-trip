@@ -4,6 +4,7 @@ import { formatDay } from '../../domain/dates'
 import { arrangeTasks, localToday, type OpenTask } from '../../domain/tasks'
 import type { Task } from '../../domain/types'
 import type { Selection } from '../selection'
+import { Comments } from './Comments'
 
 /** People who can be assigned: everyone on the trip except the Claude account. */
 function usePeople() {
@@ -98,6 +99,7 @@ export function TaskItem({ task, onSelect }: { task: Task | OpenTask; onSelect: 
           {task.assignee_ids.map(id => <span key={id} className="chip">{nameOf(id)}</span>)}
           <span className="muted small">added by {nameOf(task.created_by)}</span>
         </span>
+        <Comments target={{ task_id: task.id }} />
       </div>
       <span className="task-actions">
         <button className="link" onClick={() => setEditing(true)}>Edit</button>

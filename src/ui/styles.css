@@ -251,3 +251,12 @@ button.heart { border: 0; box-shadow: none; background: none; padding: 0 2px; fo
 button.heart:hover:not(:disabled) { background: none; transform: scale(1.15); }
 .heart-static { color: var(--red); font-size: 18px; letter-spacing: 2px; }
 .activity a { color: var(--ink); font-weight: 600; word-break: break-all; }
+
+/* Comments */
+.comments { display: grid; gap: 6px; margin-top: 4px; }
+button.comments-toggle { justify-self: start; padding: 2px 0; font-weight: 600; color: var(--ink); }
+.comment-list { list-style: none; margin: 0; padding: 0 0 0 10px; display: grid; gap: 6px; border-left: 3px solid var(--beige); }
+li.comment p { margin: 2px 0 0; }
+.comment-head { display: flex; flex-wrap: wrap; gap: 4px; align-items: baseline; }
+.comment-actions { margin-left: auto; display: flex; gap: 2px; }
+.comments form textarea { flex: 1; min-height: 2.6em; }

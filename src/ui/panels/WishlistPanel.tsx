@@ -3,6 +3,7 @@ import { useTrip } from '../../data/TripDataProvider'
 import { groupPlaces } from '../../domain/places'
 import type { Place, WishlistItem } from '../../domain/types'
 import type { MapMode, Selection } from '../selection'
+import { Comments } from './Comments'
 import { StopSearch } from './StopSearch'
 
 interface Props {
@@ -56,6 +57,7 @@ export function WishlistPanel({ onSelect, mapMode, setMapMode }: Props) {
             </div>
             <span className={`chip ${w.status}`}>{status(w)}</span>
             <span className="muted small"> · added by {nameOf(w.created_by)}</span>
+            <Comments target={{ wishlist_item_id: w.id }} />
             {data.places.some(p => p.wishlist_item_id === w.id && p.status !== 'dismissed') && (
               <ul className="linked">{data.places.filter(p => p.wishlist_item_id === w.id && p.status !== 'dismissed').map(placeButton)}</ul>
             )}

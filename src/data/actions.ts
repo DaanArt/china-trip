@@ -140,6 +140,14 @@ export function createActions(tripId: string, getData: () => TripData, refresh: 
       return done(await run(supabase.from('activity_votes').upsert({ activity_id: activityId, user_id: data.user.id, hearts }, { onConflict: 'activity_id,user_id' })))
     },
 
+    addComment: async (target: { wishlist_item_id: string } | { activity_id: string } | { task_id: string }, body: string) =>
+      done(await run(supabase.from('comments').insert({ trip_id: tripId, ...target, body: body.trim() }))),
+
+    updateComment: async (id: string, body: string) =>
+      done(await run(supabase.from('comments').update({ body: body.trim(), edited_at: new Date().toISOString() }).eq('id', id))),
+
+    deleteComment: async (id: string) => done(await run(supabase.from('comments').delete().eq('id', id))),
+
     saveMyName: async (name: string) => {
       const { data } = await supabase.auth.getUser()
       if (!data.user) throw new Error('Not signed in')
