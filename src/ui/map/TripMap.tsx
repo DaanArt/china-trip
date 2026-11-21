@@ -1,5 +1,7 @@
 import { CircleMarker, MapContainer, Polyline, TileLayer, Tooltip, useMapEvents } from 'react-leaflet'
+import { groupPlaces } from '../../domain/places'
 import type { Route } from '../../domain/route'
+import type { Place } from '../../domain/types'
 import type { MapMode, Selection } from '../selection'
 
 // Tiles: openstreetmap.de (free, keyless, not Google). Checked 2026-11-21 at
@@ -10,6 +12,7 @@ const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">Op
 
 interface Props {
   route: Route
+  places: Place[]
   selection: Selection
   onSelect: (s: Selection) => void
   mapMode: MapMode
@@ -21,7 +24,7 @@ function ClickHandler({ enabled, onClick }: { enabled: boolean; onClick: (lat: n
   return null
 }
 
-export function TripMap({ route, selection, onSelect, mapMode, onMapClick }: Props) {
+export function TripMap({ route, places, selection, onSelect, mapMode, onMapClick }: Props) {
   const internal = route.legs.filter(l => l.from && l.to)
 
   return (
@@ -41,6 +44,28 @@ export function TripMap({ route, selection, onSelect, mapMode, onMapClick }: Pro
             pathOptions={{ color: selected ? '#c8102e' : '#5a5a66', weight: selected ? 5 : 3, dashArray: leg.overnight ? '6 8' : undefined }}
             eventHandlers={{ click: () => onSelect({ kind: 'leg', key: leg.key }) }}
           />
+        )
+      })}
+
+      {groupPlaces(places).visible.map(p => {
+        const selected = selection?.kind === 'place' && selection.id === p.id
+        const idea = !p.stop_id
+        return (
+          <CircleMarker
+            key={p.id}
+            center={[p.lat, p.lng]}
+            radius={selected ? 8 : 5}
+            pathOptions={{
+              color: '#1f5f8b',
+              weight: p.status === 'suggested' ? 2 : 1,
+              dashArray: p.status === 'suggested' ? '3 3' : undefined,
+              fillColor: '#1f5f8b',
+              fillOpacity: p.status === 'suggested' ? 0 : idea ? 0.35 : 0.9,
+            }}
+            eventHandlers={{ click: () => onSelect({ kind: 'place', id: p.id }) }}
+          >
+            <Tooltip direction="top">{p.name}{p.status === 'suggested' ? ' (suggested)' : idea ? ' (idea)' : ''}</Tooltip>
+          </CircleMarker>
         )
       })}
 

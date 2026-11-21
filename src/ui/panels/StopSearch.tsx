@@ -4,8 +4,8 @@ import { searchPlaces, type PlaceResult } from '../../lib/photon'
 interface Props {
   onPick: (p: PlaceResult) => void
   onCancel: () => void
-  pickingOnMap: boolean
-  onTogglePickOnMap: () => void
+  pickingOnMap?: boolean
+  onTogglePickOnMap?: () => void
   near?: { lat: number; lng: number }
   placeholder?: string
 }
@@ -48,9 +48,11 @@ export function StopSearch({ onPick, onCancel, pickingOnMap, onTogglePickOnMap, 
         </ul>
       )}
       <div className="row">
-        <button className={pickingOnMap ? 'primary' : ''} onClick={onTogglePickOnMap}>
-          {pickingOnMap ? 'Click on the map…' : 'Click on map instead'}
-        </button>
+        {onTogglePickOnMap && (
+          <button className={pickingOnMap ? 'primary' : ''} onClick={onTogglePickOnMap}>
+            {pickingOnMap ? 'Click on the map…' : 'Click on map instead'}
+          </button>
+        )}
         <button className="link" onClick={onCancel}>Cancel</button>
       </div>
     </div>

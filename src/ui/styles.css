@@ -117,3 +117,21 @@ input.nights { width: 52px; padding: 4px; }
 .file-name { color: var(--ink); text-decoration: underline; padding: 0; }
 label.attach { font-size: 13px; color: var(--muted); cursor: pointer; position: relative; }
 label.attach input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+
+.tabs { display: flex; gap: 4px; padding: 10px 16px 0; border-bottom: 1px solid var(--line); }
+.tabs button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; padding: 6px 10px; color: var(--muted); }
+.tabs button.active { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
+.todos, .wishes, .places-list, .linked { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+button.todo { width: 100%; text-align: left; background: var(--panel); }
+button.todo.unplanned, button.todo.overrun { border-color: var(--warn); color: var(--warn); }
+button.todo.leg-date, button.todo.hotel-dates, button.todo.orphan-leg { border-color: var(--accent); color: var(--accent); }
+.wish { border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 10px; }
+.chip { font-size: 12px; padding: 1px 8px; border-radius: 99px; background: var(--line); }
+.chip.covered { background: #dff1e6; color: var(--ok); }
+.chip.not_covered { background: var(--accent-soft); color: var(--accent); }
+.linked { margin-top: 6px; padding-left: 12px; }
+.panel h4 { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
+button.place-link { border: 0; background: none; padding: 0; color: #1f5f8b; text-decoration: underline; text-align: left; }
+button.place-link.suggested { font-style: italic; }
+.grow { flex: 1; }
+.places { display: grid; gap: 8px; }

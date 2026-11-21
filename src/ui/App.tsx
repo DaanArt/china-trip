@@ -4,14 +4,20 @@ import { reverseGeocode } from '../lib/photon'
 import { supabase } from '../lib/supabase'
 import { TripMap } from './map/TripMap'
 import { LegDetail } from './panels/LegDetail'
+import { PlaceDetail } from './panels/PlaceDetail'
 import { StopDetail } from './panels/StopDetail'
 import { StopsPanel } from './panels/StopsPanel'
+import { TodoPanel } from './panels/TodoPanel'
+import { WishlistPanel } from './panels/WishlistPanel'
 import type { MapMode, Selection } from './selection'
 
+type Tab = 'route' | 'todo' | 'wishlist'
+
 export function App() {
-  const { data, route, error, actions } = useTrip()
+  const { data, route, todos, error, actions } = useTrip()
   const [selection, setSelection] = useState<Selection>(null)
   const [mapMode, setMapMode] = useState<MapMode>(null)
+  const [tab, setTab] = useState<Tab>('route')
 
   async function onMapClick(lat: number, lng: number) {
     if (!actions) return
@@ -25,6 +31,11 @@ export function App() {
   }
 
   const back = <button className="link back" onClick={() => setSelection(null)}>← Back</button>
+  const tabs: [Tab, string][] = [
+    ['route', 'Route'],
+    ['todo', `To do (${todos.length})`],
+    ['wishlist', 'Wishlist'],
+  ]
 
   return (
     <div className="app">
@@ -34,22 +45,32 @@ export function App() {
         <button className="link" onClick={() => supabase.auth.signOut()}>Sign out</button>
       </header>
       <section className="map-area">
-        {route && <TripMap route={route} selection={selection} onSelect={setSelection} mapMode={mapMode} onMapClick={onMapClick} />}
+        {route && data && (
+          <TripMap route={route} places={data.places} selection={selection} onSelect={setSelection} mapMode={mapMode} onMapClick={onMapClick} />
+        )}
       </section>
       <aside className="side">
-        {selection?.kind === 'stop' && (
+        {selection ? (
           <>
             {back}
-            <StopDetail stopId={selection.id} onDeleted={() => setSelection(null)} />
+            {selection.kind === 'stop' && <StopDetail stopId={selection.id} onSelect={setSelection} onDeleted={() => setSelection(null)} />}
+            {selection.kind === 'leg' && <LegDetail legKey={selection.key} />}
+            {selection.kind === 'place' && <PlaceDetail placeId={selection.id} onSelect={setSelection} />}
           </>
-        )}
-        {selection?.kind === 'leg' && (
+        ) : (
           <>
-            {back}
-            <LegDetail legKey={selection.key} />
+            <nav className="tabs" role="tablist">
+              {tabs.map(([key, label]) => (
+                <button key={key} role="tab" aria-selected={tab === key} className={tab === key ? 'active' : ''} onClick={() => setTab(key)}>
+                  {label}
+                </button>
+              ))}
+            </nav>
+            {tab === 'route' && <StopsPanel onSelect={setSelection} mapMode={mapMode} setMapMode={setMapMode} />}
+            {tab === 'todo' && <TodoPanel onSelect={setSelection} />}
+            {tab === 'wishlist' && <WishlistPanel onSelect={setSelection} mapMode={mapMode} setMapMode={setMapMode} />}
           </>
         )}
-        {!selection && <StopsPanel onSelect={setSelection} mapMode={mapMode} setMapMode={setMapMode} />}
       </aside>
       <footer className="bottombar" />
     </div>

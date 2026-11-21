@@ -2,17 +2,22 @@ import { useState } from 'react'
 import { useTrip } from '../../data/TripDataProvider'
 import { formatRange } from '../../domain/dates'
 import type { Stop } from '../../domain/types'
+import { groupPlaces } from '../../domain/places'
+import type { Selection } from '../selection'
 import { Reservations } from './Reservations'
+import { StopSearch } from './StopSearch'
 
 interface Props {
   stopId: string
   onDeleted: () => void
+  onSelect: (s: Selection) => void
   children?: React.ReactNode
 }
 
-export function StopDetail({ stopId, onDeleted, children }: Props) {
+export function StopDetail({ stopId, onDeleted, onSelect, children }: Props) {
   const { data, route, actions } = useTrip()
   const [error, setError] = useState<string | null>(null)
+  const [addingPlace, setAddingPlace] = useState(false)
   const rs = route?.stops.find(s => s.stop.id === stopId)
   if (!data || !actions || !rs) return <p className="muted">This stop is no longer on the route.</p>
 
@@ -58,6 +63,30 @@ export function StopDetail({ stopId, onDeleted, children }: Props) {
         <label>Notes<textarea rows={3} {...text('notes')} /></label>
       </div>
       <Reservations target={{ stop: rs }} />
+      <section className="places" aria-label="Places">
+        <h3>Places</h3>
+        <ul className="places-list">
+          {(groupPlaces(data.places).byStop.get(stop.id) ?? []).map(p => (
+            <li key={p.id}>
+              <button className={`place-link ${p.status}`} onClick={() => onSelect({ kind: 'place', id: p.id })}>{p.name}</button>
+              {p.status === 'suggested' && <span className="muted small"> · suggested</span>}
+            </li>
+          ))}
+        </ul>
+        {addingPlace ? (
+          <StopSearch
+            placeholder="Something to do nearby"
+            near={{ lat: stop.lat, lng: stop.lng }}
+            onCancel={() => setAddingPlace(false)}
+            onPick={p => {
+              setAddingPlace(false)
+              actions.addPlace({ name: p.name, lat: p.lat, lng: p.lng, stop_id: stop.id }).catch(err => setError((err as Error).message))
+            }}
+          />
+        ) : (
+          <button onClick={() => setAddingPlace(true)}>Add place</button>
+        )}
+      </section>
       {children}
       <button className="danger" onClick={remove}>Delete stop</button>
     </section>
