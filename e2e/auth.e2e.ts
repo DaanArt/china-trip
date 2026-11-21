@@ -14,3 +14,13 @@ test('signing in shows the trip and survives a reload', async ({ page }) => {
   await page.reload()
   await expect(page.locator('.topbar')).toContainText('China 2027')
 })
+
+test('the app uses its bundled Fredoka font, never Google Fonts', async ({ page }) => {
+  const hosts: string[] = []
+  page.on('request', r => hosts.push(new URL(r.url()).host))
+  await login(page)
+  await page.evaluate(() => document.fonts.ready)
+  expect(await page.evaluate(() => document.fonts.check('700 16px Fredoka'))).toBe(true)
+  expect(await page.evaluate(() => getComputedStyle(document.querySelector('.topbar')!).fontFamily)).toContain('Fredoka')
+  expect(hosts.filter(h => /fonts\.(googleapis|gstatic)/.test(h))).toEqual([])
+})
