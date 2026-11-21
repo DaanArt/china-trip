@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTrip } from '../../data/TripDataProvider'
 import { formatDay } from '../../domain/dates'
 import type { Leg, Mode } from '../../domain/types'
+import { Reservations } from './Reservations'
 import { legSummary } from './StopsPanel'
 
 const MODES: Mode[] = ['train', 'flight', 'bus', 'car', 'other']
@@ -74,6 +75,7 @@ export function LegDetail({ legKey, children }: { legKey: string; children?: Rea
           </label>
         )}
       </div>
+      <Reservations target={{ leg }} />
       {children}
     </section>
   )

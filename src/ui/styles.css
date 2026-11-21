@@ -104,3 +104,16 @@ li.stop .num {
 button.stop-name { border: 0; background: none; padding: 0; text-align: left; font-weight: 600; }
 li.stop .dates { font-size: 13px; color: var(--muted); white-space: nowrap; }
 input.nights { width: 52px; padding: 4px; }
+
+.reservations { display: grid; gap: 8px; }
+.reservations h3, .places h3 { margin: 8px 0 0; font-size: 15px; }
+.res-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; display: grid; gap: 4px; }
+.row.spread { justify-content: space-between; }
+.tag { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.pre { white-space: pre-wrap; }
+.res-form { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; }
+.res-form .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.files { display: grid; gap: 2px; }
+.file-name { color: var(--ink); text-decoration: underline; padding: 0; }
+label.attach { font-size: 13px; color: var(--muted); cursor: pointer; position: relative; }
+label.attach input { position: absolute; opacity: 0; width: 1px; height: 1px; }

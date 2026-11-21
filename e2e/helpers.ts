@@ -24,12 +24,18 @@ export async function login(page: Page) {
   await expect(header).toContainText('China 2027')
 }
 
-/** Signed-in client (as the Claude account) for setup and cleanup. */
+let shared: ReturnType<typeof createClient> | null = null
+
+/** Signed-in client (as the Claude account) for setup and cleanup. Signs in once
+ *  per worker to stay under Supabase's sign-in rate limit. */
 export async function db() {
+  if (shared) return shared
   const client = createClient(process.env.VITE_SUPABASE_URL!, process.env.VITE_SUPABASE_ANON_KEY!, {
     auth: { persistSession: false },
   })
-  await client.auth.signInWithPassword(CLAUDE)
+  const { error } = await client.auth.signInWithPassword(CLAUDE)
+  if (error) throw new Error(`e2e helper sign-in failed: ${error.message}`)
+  shared = client
   return client
 }
 

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTrip } from '../../data/TripDataProvider'
 import { formatRange } from '../../domain/dates'
 import type { Stop } from '../../domain/types'
+import { Reservations } from './Reservations'
 
 interface Props {
   stopId: string
@@ -56,6 +57,7 @@ export function StopDetail({ stopId, onDeleted, children }: Props) {
         )}
         <label>Notes<textarea rows={3} {...text('notes')} /></label>
       </div>
+      <Reservations target={{ stop: rs }} />
       {children}
       <button className="danger" onClick={remove}>Delete stop</button>
     </section>
