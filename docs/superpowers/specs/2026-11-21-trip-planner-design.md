@@ -144,6 +144,6 @@ Supabase Realtime subscriptions on the trip tables, so changes by one user appea
 
 ## Status
 
-- Supabase account exists; project URL and anon key are still to be handed over.
-- **Database setup** is done by the builder with the Supabase CLI: Daan runs `supabase login` (and `supabase link`, which asks for the database password) themselves, so the token and password never pass through chat. Schema, access rules, the storage bucket and settings are applied as versioned SQL migrations in the repo, and the access rules are tested against the real project with the anon key (a stranger must see nothing). The three user accounts are created in the dashboard or via the CLI. Daan revokes the CLI access token after setup if they want.
-- `china_trip` is not yet a git repository; the repo gets created at the start of implementation, and this document gets committed then.
+- **v1 live** at https://daanart.github.io/china-trip/ (repo DaanArt/china-trip, deployed by GitHub Actions on push to `main`), 2026-11-21.
+- Supabase project `china-trip` (eu-west-1) has the schema, access rules and storage applied; sign-ups are off; logins exist for Daan, Cynthia and Claude.
+- Next: the "before departure" version (offline mode, taxi card, phone polish).
