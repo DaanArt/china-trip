@@ -4,7 +4,7 @@
 import { existsSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
 
-process.loadEnvFile('.env.production')
+process.loadEnvFile('.env')
 if (existsSync('.env.claude')) process.loadEnvFile('.env.claude')
 
 const url = process.env.VITE_SUPABASE_URL!

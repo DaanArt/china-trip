@@ -1,0 +1,72 @@
+:root {
+  --bg: #f6f4ef;
+  --panel: #ffffff;
+  --ink: #1d1d1f;
+  --muted: #6b6b70;
+  --line: #e3e0d8;
+  --accent: #c8102e;
+  --accent-soft: #fbe7ea;
+  --ok: #2e7d4f;
+  --warn: #b26a00;
+  --radius: 10px;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141416;
+    --panel: #1d1d20;
+    --ink: #ececec;
+    --muted: #9a9aa0;
+    --line: #2e2e33;
+    --accent: #ff5a6e;
+    --accent-soft: #3a1d22;
+  }
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; height: 100%; }
+body { font-size: 15px; line-height: 1.45; }
+button, input, select, textarea { font: inherit; color: inherit; }
+input, select, textarea {
+  padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); min-width: 0;
+}
+button {
+  padding: 6px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); cursor: pointer;
+}
+button.primary, form.card button[type=submit] { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.link { border: 0; background: none; color: var(--muted); padding: 4px; }
+button:disabled { opacity: .55; cursor: default; }
+.muted { color: var(--muted); }
+.error { color: var(--accent); }
+.center { text-align: center; margin-top: 30vh; }
+
+.login { display: grid; place-items: center; min-height: 100%; padding: 16px; }
+.card {
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 24px; width: min(360px, 100%); display: grid; gap: 12px;
+}
+.card h1 { margin: 0; font-size: 22px; }
+.card label { display: grid; gap: 4px; font-size: 14px; }
+
+.app {
+  display: grid; height: 100%;
+  grid-template-columns: 1fr minmax(320px, 400px);
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas: "top top" "map side" "bottom side";
+}
+.topbar {
+  grid-area: top; display: flex; align-items: center; gap: 12px; justify-content: space-between;
+  padding: 8px 16px; border-bottom: 1px solid var(--line); background: var(--panel);
+}
+.map-area { grid-area: map; position: relative; min-height: 300px; }
+.side { grid-area: side; overflow-y: auto; border-left: 1px solid var(--line); background: var(--panel); }
+.bottombar { grid-area: bottom; border-top: 1px solid var(--line); background: var(--panel); }
+@media (max-width: 760px) {
+  .app {
+    grid-template-columns: 1fr; grid-template-rows: auto 45vh auto auto;
+    grid-template-areas: "top" "map" "bottom" "side";
+    height: auto; min-height: 100%;
+  }
+  .side { border-left: 0; overflow: visible; }
+}

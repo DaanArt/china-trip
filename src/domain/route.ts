@@ -1,4 +1,5 @@
 import { addDays, diffDays } from './dates'
+import { sortStops } from './ordering'
 import type { ISODate, Leg, Mode, Stop, Trip } from './types'
 
 export interface RouteStop {
@@ -41,9 +42,7 @@ function clampNights(n: number): number {
 
 export function buildRoute(trip: Trip, stops: Stop[], legs: Leg[]): Route {
   const rows = new Map(legs.map(l => [legKey(l.from_stop_id, l.to_stop_id), l]))
-  const sorted = [...stops].sort(
-    (a, b) => a.position - b.position || a.created_at.localeCompare(b.created_at),
-  )
+  const sorted = sortStops(stops)
 
   const routeStops: RouteStop[] = []
   const routeLegs: RouteLeg[] = []
