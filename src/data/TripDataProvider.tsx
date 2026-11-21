@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { buildRoute, type Route } from '../domain/route'
 import { deriveTodos, type Todo } from '../domain/todos'
-import type { Attachment, Leg, Place, Profile, Reservation, Stop, Trip, WishlistItem } from '../domain/types'
+import type { Attachment, Leg, Place, Profile, Reservation, Stop, Task, Trip, WishlistItem } from '../domain/types'
 import { supabase } from '../lib/supabase'
 import { createActions, type Actions } from './actions'
 
@@ -14,6 +14,7 @@ export interface TripData {
   places: Place[]
   wishlist: WishlistItem[]
   profiles: Profile[]
+  tasks: Task[]
 }
 
 interface TripContext {
@@ -36,7 +37,7 @@ async function rows<T>(table: string, order = 'created_at'): Promise<T[]> {
 }
 
 async function loadAll(): Promise<TripData> {
-  const [trips, stops, legs, reservations, attachments, places, wishlist, profiles] = await Promise.all([
+  const [trips, stops, legs, reservations, attachments, places, wishlist, profiles, tasks] = await Promise.all([
     rows<Trip>('trip', 'start_date'),
     rows<Stop>('stops'),
     rows<Leg>('legs'),
@@ -45,9 +46,10 @@ async function loadAll(): Promise<TripData> {
     rows<Place>('places'),
     rows<WishlistItem>('wishlist_items'),
     rows<Profile>('profiles', 'display_name'),
+    rows<Task>('tasks'),
   ])
   if (!trips[0]) throw new Error('No trip found')
-  return { trip: trips[0], stops, legs, reservations, attachments, places, wishlist, profiles }
+  return { trip: trips[0], stops, legs, reservations, attachments, places, wishlist, profiles, tasks }
 }
 
 export function TripDataProvider({ children }: { children: ReactNode }) {

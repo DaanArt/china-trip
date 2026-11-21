@@ -1,5 +1,5 @@
 import { nextPosition, reorderPositions } from '../domain/ordering'
-import type { Attachment, Leg, Place, Reservation, Stop, WishlistItem } from '../domain/types'
+import type { Attachment, Leg, Place, Reservation, Stop, Task, WishlistItem } from '../domain/types'
 import { supabase } from '../lib/supabase'
 import type { TripData } from './TripDataProvider'
 
@@ -106,6 +106,17 @@ export function createActions(tripId: string, getData: () => TripData, refresh: 
       done(await run(supabase.from('wishlist_items').update(patch).eq('id', id))),
 
     deleteWish: async (id: string) => done(await run(supabase.from('wishlist_items').delete().eq('id', id))),
+
+    addTask: async (input: { text: string; assignee_ids?: string[]; stop_id?: string | null; due_date?: string | null; source_todo_id?: string | null }): Promise<Task> =>
+      done(await run(supabase.from('tasks').insert({ trip_id: tripId, ...input, text: input.text.trim() }).select().single<Task>())),
+
+    /** Ticking a to-do also records when; unticking clears it. */
+    updateTask: async (id: string, patch: Partial<Task>) => {
+      const withTime = 'done' in patch ? { ...patch, done_at: patch.done ? new Date().toISOString() : null } : patch
+      return done(await run(supabase.from('tasks').update(withTime).eq('id', id)))
+    },
+
+    deleteTask: async (id: string) => done(await run(supabase.from('tasks').delete().eq('id', id))),
 
     saveMyName: async (name: string) => {
       const { data } = await supabase.auth.getUser()

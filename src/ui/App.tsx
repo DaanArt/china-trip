@@ -16,7 +16,7 @@ import { Timelapse } from './Timelapse'
 type Tab = 'route' | 'todo' | 'wishlist'
 
 export function App() {
-  const { data, route, todos, error, actions } = useTrip()
+  const { data, route, error, actions } = useTrip()
   const [selection, setSelection] = useState<Selection>(null)
   const [mapMode, setMapMode] = useState<MapMode>(null)
   const [tab, setTab] = useState<Tab>('route')
@@ -36,7 +36,7 @@ export function App() {
   const back = <button className="link back" onClick={() => setSelection(null)}>← Back</button>
   const tabs: [Tab, string][] = [
     ['route', 'Route'],
-    ['todo', `To do (${todos.length})`],
+    ['todo', `To do (${data?.tasks.filter(t => !t.done).length ?? 0})`],
     ['wishlist', 'Wishlist'],
   ]
 

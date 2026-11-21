@@ -46,4 +46,5 @@ export async function cleanup() {
   await client.from('stops').delete().like('name', `${PREFIX}%`)
   await client.from('places').delete().like('name', `${PREFIX}%`)
   await client.from('wishlist_items').delete().like('text', `${PREFIX}%`)
+  await client.from('tasks').delete().like('text', `%${PREFIX}%`) // includes copies of E2E suggestions
 }

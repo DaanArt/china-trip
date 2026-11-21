@@ -50,6 +50,7 @@ test('a booking on a journey that left the route can be opened and deleted', asy
   await client.from('reservations').insert({ trip_id: tripId, leg_id: leg!.id, kind: 'transport', title: `${PREFIX}Old train` })
   await login(page)
   await page.getByRole('tab', { name: /To do/ }).click()
+  await page.getByRole('button', { name: /^Suggestions \(\d+\)/ }).click()
   await page.getByRole('button', { name: `Booking ${PREFIX}A → ${PREFIX}C no longer matches the route` }).click()
   await expect(page.getByText('no longer on the route')).toBeVisible()
   page.once('dialog', d => d.accept())

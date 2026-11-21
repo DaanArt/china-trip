@@ -214,3 +214,25 @@ button.place-link.suggested { font-style: italic; text-decoration-style: dashed;
 .timelapse-label { font-size: 14px; font-weight: 600; min-width: 16em; }
 .timelapse button.play { min-width: 44px; background: var(--yellow); }
 @media (max-width: 760px) { .timelapse { flex-wrap: wrap; } .timelapse-label { min-width: 0; flex-basis: 100%; } }
+
+/* Own to-dos */
+.task-form { display: grid; gap: 8px; border: 2px dashed var(--ink); border-radius: var(--radius); padding: 10px; background: var(--paper); }
+.task-form label.who, .task-form label.inline { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; }
+.task-form label.who input { width: 16px; height: 16px; accent-color: var(--red); }
+.tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+li.task {
+  display: grid; grid-template-columns: 22px 1fr auto; gap: 10px; align-items: start;
+  border: 2px solid var(--ink); border-radius: var(--radius); padding: 9px 10px; background: var(--paper); box-shadow: var(--shadow-sm);
+}
+li.task > input[type=checkbox] { width: 20px; height: 20px; margin-top: 1px; accent-color: var(--green); }
+li.task.overdue { border-left: 8px solid var(--red); }
+li.task.done { opacity: .6; box-shadow: none; }
+li.task.done .task-text { text-decoration: line-through; }
+.task-body { display: grid; gap: 4px; }
+.task-text { font-weight: 600; }
+.task-tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+button.collapse {
+  justify-self: start; text-transform: uppercase; letter-spacing: .06em; font-size: 13px; background: var(--beige);
+}
+button.collapse.suggestions { margin-top: 8px; }
+li.suggestion { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }

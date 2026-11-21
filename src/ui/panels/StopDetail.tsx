@@ -7,6 +7,7 @@ import { groupPlaces } from '../../domain/places'
 import type { Selection } from '../selection'
 import { Reservations } from './Reservations'
 import { StopSearch } from './StopSearch'
+import { TaskForm, TaskList } from './Tasks'
 
 interface Props {
   stopId: string
@@ -73,6 +74,11 @@ export function StopDetail({ stopId, onDeleted, onSelect, children }: Props) {
         <label>Notes<textarea key={`notes-${stop.notes}`} rows={3} {...text('notes')} /></label>
       </div>
       <Reservations target={{ stop: rs }} />
+      <section className="places" aria-label="To-dos">
+        <h3>To-dos</h3>
+        <TaskList onSelect={onSelect} stopId={stop.id} />
+        <TaskForm stopId={stop.id} />
+      </section>
       <section className="places" aria-label="Places">
         <h3>Places</h3>
         <ul className="places-list">
