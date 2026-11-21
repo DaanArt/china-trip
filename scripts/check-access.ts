@@ -9,7 +9,7 @@ if (existsSync('.env.claude')) process.loadEnvFile('.env.claude')
 
 const url = process.env.VITE_SUPABASE_URL!
 const key = process.env.VITE_SUPABASE_ANON_KEY!
-const TABLES = ['trip', 'profiles', 'stops', 'legs', 'reservations', 'attachments', 'wishlist_items', 'places', 'tasks']
+const TABLES = ['trip', 'profiles', 'stops', 'legs', 'reservations', 'attachments', 'wishlist_items', 'places', 'tasks', 'activities', 'activity_votes']
 
 let failed = 0
 function report(ok: boolean, name: string, detail = '') {

@@ -12,7 +12,7 @@ async function run<T>(query: PromiseLike<Result<T>>): Promise<T> {
   return data as T
 }
 
-export type ReservationInput = Omit<Reservation, 'id' | 'trip_id' | 'stop_id' | 'leg_id' | 'created_by' | 'created_at'>
+export type ReservationInput = Omit<Reservation, 'id' | 'trip_id' | 'stop_id' | 'leg_id' | 'activity_id' | 'created_by' | 'created_at'>
 
 /** All mutations. Each one refreshes the shared snapshot when it succeeds. */
 export function createActions(tripId: string, getData: () => TripData, refresh: () => Promise<void>) {
@@ -56,7 +56,7 @@ export function createActions(tripId: string, getData: () => TripData, refresh: 
       return done(await run(supabase.from('legs').insert(row).select().single<Leg>()))
     },
 
-    addReservation: async (target: { stop_id: string } | { leg_id: string }, input: ReservationInput): Promise<Reservation> =>
+    addReservation: async (target: { stop_id: string } | { leg_id: string } | { activity_id: string }, input: ReservationInput): Promise<Reservation> =>
       done(await run(supabase.from('reservations').insert({ trip_id: tripId, ...target, ...input }).select().single<Reservation>())),
 
     updateReservation: async (id: string, patch: Partial<Reservation>) =>

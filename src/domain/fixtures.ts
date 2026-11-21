@@ -55,6 +55,7 @@ export function makeReservation(over: Partial<Reservation> & Pick<Reservation, '
     trip_id: 'trip-1',
     stop_id: null,
     leg_id: null,
+    activity_id: null,
     title: 'Booking',
     confirmation: null,
     start_date: null,

@@ -52,6 +52,7 @@ export interface Reservation {
   trip_id: string
   stop_id: string | null
   leg_id: string | null
+  activity_id: string | null
   kind: ReservationKind
   title: string
   confirmation: string | null
@@ -125,4 +126,20 @@ export interface Task {
   source_todo_id: string | null // the suggestion it was copied from
   created_by: string | null
   created_at: string
+}
+
+export interface Activity {
+  id: string
+  trip_id: string
+  stop_id: string
+  title: string
+  notes: string | null
+  created_by: string | null
+  created_at: string
+}
+
+export interface ActivityVote {
+  activity_id: string
+  user_id: string
+  hearts: number // 0-3
 }
