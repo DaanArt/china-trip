@@ -9,7 +9,9 @@ import { StopDetail } from './panels/StopDetail'
 import { StopsPanel } from './panels/StopsPanel'
 import { TodoPanel } from './panels/TodoPanel'
 import { WishlistPanel } from './panels/WishlistPanel'
+import { positionAt, travelledPath } from '../domain/playback'
 import type { MapMode, Selection } from './selection'
+import { Timelapse } from './Timelapse'
 
 type Tab = 'route' | 'todo' | 'wishlist'
 
@@ -18,6 +20,7 @@ export function App() {
   const [selection, setSelection] = useState<Selection>(null)
   const [mapMode, setMapMode] = useState<MapMode>(null)
   const [tab, setTab] = useState<Tab>('route')
+  const [t, setT] = useState<number | null>(null)
 
   async function onMapClick(lat: number, lng: number) {
     if (!actions) return
@@ -46,7 +49,16 @@ export function App() {
       </header>
       <section className="map-area">
         {route && data && (
-          <TripMap route={route} places={data.places} selection={selection} onSelect={setSelection} mapMode={mapMode} onMapClick={onMapClick} />
+          <TripMap
+            route={route}
+            places={data.places}
+            selection={selection}
+            onSelect={setSelection}
+            mapMode={mapMode}
+            onMapClick={onMapClick}
+            marker={t === null ? null : positionAt(route, t)}
+            travelled={t === null ? [] : travelledPath(route, t)}
+          />
         )}
       </section>
       <aside className="side">
@@ -72,7 +84,7 @@ export function App() {
           </>
         )}
       </aside>
-      <footer className="bottombar" />
+      <footer className="bottombar">{route && <Timelapse route={route} onChange={setT} />}</footer>
     </div>
   )
 }

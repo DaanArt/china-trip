@@ -1,4 +1,6 @@
-import { CircleMarker, MapContainer, Polyline, TileLayer, Tooltip, useMapEvents } from 'react-leaflet'
+import { useEffect } from 'react'
+import { CircleMarker, MapContainer, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet'
+import type { LatLng } from '../../domain/geo'
 import { groupPlaces } from '../../domain/places'
 import type { Route } from '../../domain/route'
 import type { Place } from '../../domain/types'
@@ -17,6 +19,8 @@ interface Props {
   onSelect: (s: Selection) => void
   mapMode: MapMode
   onMapClick: (lat: number, lng: number) => void
+  marker?: LatLng | null
+  travelled?: LatLng[]
 }
 
 function ClickHandler({ enabled, onClick }: { enabled: boolean; onClick: (lat: number, lng: number) => void }) {
@@ -24,7 +28,16 @@ function ClickHandler({ enabled, onClick }: { enabled: boolean; onClick: (lat: n
   return null
 }
 
-export function TripMap({ route, places, selection, onSelect, mapMode, onMapClick }: Props) {
+/** Pans only when the timelapse marker leaves the visible area. */
+function Follow({ marker }: { marker: LatLng | null }) {
+  const map = useMap()
+  useEffect(() => {
+    if (marker && !map.getBounds().contains([marker.lat, marker.lng])) map.panTo([marker.lat, marker.lng])
+  }, [map, marker])
+  return null
+}
+
+export function TripMap({ route, places, selection, onSelect, mapMode, onMapClick, marker = null, travelled = [] }: Props) {
   const internal = route.legs.filter(l => l.from && l.to)
 
   return (
@@ -69,6 +82,11 @@ export function TripMap({ route, places, selection, onSelect, mapMode, onMapClic
         )
       })}
 
+      {travelled.length > 1 && (
+        <Polyline positions={travelled.map(p => [p.lat, p.lng] as [number, number])} pathOptions={{ color: '#c8102e', weight: 6, opacity: 0.6 }} interactive={false} />
+      )}
+      <Follow marker={marker} />
+
       {route.stops.map(rs => {
         const selected = selection?.kind === 'stop' && selection.id === rs.stop.id
         return (
@@ -85,6 +103,14 @@ export function TripMap({ route, places, selection, onSelect, mapMode, onMapClic
           </CircleMarker>
         )
       })}
+      {marker && (
+        <CircleMarker
+          center={[marker.lat, marker.lng]}
+          radius={11}
+          interactive={false}
+          pathOptions={{ className: 'timelapse-marker', color: '#1d1d1f', weight: 3, fillColor: '#ffc83d', fillOpacity: 1 }}
+        />
+      )}
     </MapContainer>
   )
 }
