@@ -112,3 +112,17 @@ export interface Profile {
   id: string
   display_name: string
 }
+
+export interface Task {
+  id: string
+  trip_id: string
+  text: string
+  done: boolean
+  done_at: string | null
+  assignee_ids: string[]
+  stop_id: string | null
+  due_date: ISODate | null
+  source_todo_id: string | null // the suggestion it was copied from
+  created_by: string | null
+  created_at: string
+}
