@@ -85,3 +85,9 @@ test('an overnight flag on the inbound leg is ignored', () => {
   expect(route.legs[0].row).toBe(inbound)
   expect(route.plannedNights).toBe(13)
 })
+
+test('absurd nights are capped so a typo cannot freeze the app', () => {
+  const route = buildRoute(makeTrip(), [makeStop({ name: 'Typo', nights: 1e8 })], [])
+  expect(route.stops[0].nights).toBe(366)
+  expect(route.stops[0].nightDates).toHaveLength(366)
+})

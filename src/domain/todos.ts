@@ -1,5 +1,5 @@
 import { addDays, formatDay, formatDayLong, formatRange } from './dates'
-import type { Route, RouteLeg, RouteStop } from './route'
+import { legKey, type Route, type RouteLeg, type RouteStop } from './route'
 import type { ISODate, Mode, Reservation } from './types'
 
 export type TodoKind = 'unplanned' | 'overrun' | 'book-leg' | 'leg-date' | 'book-hotel' | 'hotel-dates' | 'orphan-leg'
@@ -106,6 +106,7 @@ export function deriveTodos(route: Route, reservations: Reservation[]): Todo[] {
     todos.push({
       id: `orphan-leg:${orphan.id}`,
       kind: 'orphan-leg',
+      legKey: legKey(orphan.from_stop_id, orphan.to_stop_id),
       text: `Booking ${placeName(byId(orphan.from_stop_id))} → ${placeName(byId(orphan.to_stop_id))} no longer matches the route`,
     })
   }

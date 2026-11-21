@@ -21,7 +21,7 @@ function when(r: Reservation): string {
   return [part(a, r.start_date, r.start_time), part(b, r.end_date, r.end_time)].filter(Boolean).join(' · ')
 }
 
-export function Reservations({ target }: { target: Target }) {
+export function Reservations({ target, allowAdd = true }: { target: Target; allowAdd?: boolean }) {
   const { data, actions, nameOf } = useTrip()
   const [editing, setEditing] = useState<'new' | string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -89,7 +89,7 @@ export function Reservations({ target }: { target: Target }) {
           onSave={create}
         />
       ) : (
-        <button onClick={() => setEditing('new')}>Add reservation</button>
+        allowAdd && <button onClick={() => setEditing('new')}>Add reservation</button>
       )}
     </section>
   )

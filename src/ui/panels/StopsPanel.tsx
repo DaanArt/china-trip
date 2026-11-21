@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTrip } from '../../data/TripDataProvider'
 import { formatDay, formatRange } from '../../domain/dates'
 import { estimateHours, formatHours, haversineKm } from '../../domain/geo'
-import type { RouteLeg } from '../../domain/route'
+import { clampNights, MAX_NIGHTS, type RouteLeg } from '../../domain/route'
 import { MODE_ICON, type MapMode, type Selection } from '../selection'
 import { StopSearch } from './StopSearch'
 
@@ -64,11 +64,13 @@ export function StopsPanel({ onSelect, mapMode, setMapMode }: Props) {
                       className="nights"
                       type="number"
                       min={0}
+                      max={MAX_NIGHTS}
                       step={1}
                       aria-label={`Nights in ${rs.stop.name}`}
                       defaultValue={rs.stop.nights}
                       onBlur={e => {
-                        const n = Math.max(0, Math.floor(Number(e.target.value) || 0))
+                        const n = clampNights(Number(e.target.value) || 0)
+                        e.target.value = String(n)
                         if (n !== rs.stop.nights) act(actions.updateStop(rs.stop.id, { nights: n }))
                       }}
                       onKeyDown={e => e.key === 'Enter' && e.currentTarget.blur()}

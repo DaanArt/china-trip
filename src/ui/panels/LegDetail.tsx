@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTrip } from '../../data/TripDataProvider'
 import { formatDay } from '../../domain/dates'
+import type { RouteLeg } from '../../domain/route'
 import type { Leg, Mode } from '../../domain/types'
 import { Reservations } from './Reservations'
 import { legSummary } from './StopsPanel'
@@ -11,7 +12,22 @@ export function LegDetail({ legKey, children }: { legKey: string; children?: Rea
   const { route, actions } = useTrip()
   const [error, setError] = useState<string | null>(null)
   const leg = route?.legs.find(l => l.key === legKey)
-  if (!route || !actions || !leg) return <p className="muted">This leg is no longer on the route.</p>
+  if (!route || !actions) return null
+  if (!leg) {
+    const orphan = route.orphanLegs.find(l => legKey === `${l.from_stop_id ?? 'home'}->${l.to_stop_id ?? 'home'}`)
+    if (!orphan) return <p className="muted panel">This journey is no longer on the route.</p>
+    const stop = (id: string | null) => route.stops.find(s => s.stop.id === id)?.stop ?? null
+    const from = stop(orphan.from_stop_id)
+    const to = stop(orphan.to_stop_id)
+    const asLeg: RouteLeg = { key: legKey, kind: 'internal', from, to, row: orphan, date: '', mode: orphan.mode, overnight: orphan.overnight }
+    return (
+      <section className="panel">
+        <h2>{from?.name ?? route.trip.home_label} → {to?.name ?? route.trip.home_label}</h2>
+        <p className="error">This journey is no longer on the route. Delete the booking, or book the new journey and then delete this one.</p>
+        <Reservations target={{ leg: asLeg }} allowAdd={false} />
+      </section>
+    )
+  }
 
   const home = route.trip.home_label
   const save = (patch: Partial<Leg>) =>
@@ -52,6 +68,7 @@ export function LegDetail({ legKey, children }: { legKey: string; children?: Rea
           <label>
             Why
             <input
+              key={`nb-${leg.row.no_booking_note}`}
               defaultValue={leg.row.no_booking_note ?? ''}
               placeholder="e.g. bus, buy at the station"
               onBlur={e => e.target.value !== (leg.row?.no_booking_note ?? '') && save({ no_booking_note: e.target.value || null })}
@@ -62,6 +79,7 @@ export function LegDetail({ legKey, children }: { legKey: string; children?: Rea
           <label>
             Travel time (hours)
             <input
+              key={`h-${leg.row?.manual_hours}`}
               type="number"
               min={0}
               step={0.25}

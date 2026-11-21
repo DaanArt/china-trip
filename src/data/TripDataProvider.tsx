@@ -56,9 +56,13 @@ export function TripDataProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null)
   const dataRef = useRef<TripData | null>(null)
 
+  const latest = useRef(0)
+
   const refresh = useCallback(async () => {
+    const seq = ++latest.current
     try {
       const next = await loadAll()
+      if (seq !== latest.current) return // a newer reload has started; drop this one
       dataRef.current = next
       setData(next)
       setError(null)
@@ -78,9 +82,16 @@ export function TripDataProvider({ children }: { children: ReactNode }) {
         clearTimeout(timer)
         timer = setTimeout(refresh, 300)
       })
-      .subscribe()
+      // (Re)connecting doesn't replay missed changes, so reload whenever it connects.
+      .subscribe(status => status === 'SUBSCRIBED' && refresh())
+    // Also reload when the tab comes back or the network returns (sleep, patchy hotel Wi-Fi).
+    const onVisible = () => document.visibilityState === 'visible' && refresh()
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('online', refresh)
     return () => {
       clearTimeout(timer)
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('online', refresh)
       supabase.removeChannel(channel)
     }
   }, [refresh])

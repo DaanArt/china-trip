@@ -129,3 +129,11 @@ test('to-dos carry stable ids and their target', () => {
   expect(inbound?.legKey).toBe(`home->${beijing.id}`)
   expect(new Set(todos.map(t => t.id)).size).toBe(todos.length)
 })
+
+test('the orphan booking to-do points at its leg so it can be opened', () => {
+  const { trip, stops, legs, beijing, chengdu } = standardTrip()
+  const orphan = makeLeg({ from_stop_id: beijing.id, to_stop_id: chengdu.id })
+  const train = makeReservation({ kind: 'transport', leg_id: orphan.id })
+  const todo = deriveTodos(buildRoute(trip, stops, [...legs, orphan]), [train]).find(t => t.kind === 'orphan-leg')
+  expect(todo?.legKey).toBe(`${beijing.id}->${chengdu.id}`)
+})

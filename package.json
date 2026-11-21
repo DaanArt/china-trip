@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "vitest run && TZ=Asia/Shanghai vitest run src/domain && TZ=America/Los_Angeles vitest run src/domain",
     "check-access": "tsx scripts/check-access.ts",
     "e2e": "playwright test"
   },

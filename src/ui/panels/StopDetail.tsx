@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTrip } from '../../data/TripDataProvider'
 import { formatRange } from '../../domain/dates'
 import type { Stop } from '../../domain/types'
+import { stopDeletionImpact } from '../../domain/deletion'
 import { groupPlaces } from '../../domain/places'
 import type { Selection } from '../selection'
 import { Reservations } from './Reservations'
@@ -23,6 +24,8 @@ export function StopDetail({ stopId, onDeleted, onSelect, children }: Props) {
 
   const stop = rs.stop
   const save = (patch: Partial<Stop>) => actions.updateStop(stop.id, patch).catch(err => setError((err as Error).message))
+  // Uncontrolled inputs keyed on the saved value: an edit by the other person remounts
+  // the field with the new text, so blurring never writes stale text back.
   const text = (field: 'name' | 'name_zh' | 'notes' | 'no_booking_note') => ({
     defaultValue: stop[field] ?? '',
     onBlur: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -32,11 +35,18 @@ export function StopDetail({ stopId, onDeleted, onSelect, children }: Props) {
   })
 
   async function remove() {
-    const n = data!.reservations.filter(r => r.stop_id === stop.id).length
+    const impact = stopDeletionImpact({ ...data!, home: route!.trip.home_label }, stop.id)
+    if (impact.blockingJourneys.length) {
+      window.alert(
+        `${stop.name} can't be deleted yet. These journeys have bookings: ${impact.blockingJourneys.join(', ')}. Delete or move those bookings first.`,
+      )
+      return
+    }
+    const n = impact.reservations.length
     const msg = n ? `Delete ${stop.name} and its ${n} reservation${n === 1 ? '' : 's'}?` : `Delete ${stop.name}?`
     if (!window.confirm(msg)) return
     try {
-      await actions!.deleteStop(stop.id)
+      await actions!.deleteStop(stop.id, impact.files)
       onDeleted()
     } catch (err) {
       setError((err as Error).message)
@@ -51,16 +61,16 @@ export function StopDetail({ stopId, onDeleted, onSelect, children }: Props) {
       </p>
       {error && <p className="error" role="alert">{error}</p>}
       <div className="fields">
-        <label>Name<input {...text('name')} /></label>
-        <label>Name in Chinese<input {...text('name_zh')} lang="zh" /></label>
+        <label>Name<input key={`name-${stop.name}`} {...text('name')} /></label>
+        <label>Name in Chinese<input key={`zh-${stop.name_zh}`} {...text('name_zh')} lang="zh" /></label>
         <label className="check">
           <input type="checkbox" key={`n-${stop.no_booking_needed}`} defaultChecked={stop.no_booking_needed} onChange={e => save({ no_booking_needed: e.target.checked })} />
           No hotel needed
         </label>
         {stop.no_booking_needed && (
-          <label>Why<input {...text('no_booking_note')} placeholder="e.g. staying with friends" /></label>
+          <label>Why<input key={`nb-${stop.no_booking_note}`} {...text('no_booking_note')} placeholder="e.g. staying with friends" /></label>
         )}
-        <label>Notes<textarea rows={3} {...text('notes')} /></label>
+        <label>Notes<textarea key={`notes-${stop.notes}`} rows={3} {...text('notes')} /></label>
       </div>
       <Reservations target={{ stop: rs }} />
       <section className="places" aria-label="Places">

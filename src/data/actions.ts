@@ -32,7 +32,11 @@ export function createActions(tripId: string, getData: () => TripData, refresh: 
     updateStop: async (id: string, patch: Partial<Stop>) =>
       done(await run(supabase.from('stops').update(patch).eq('id', id))),
 
-    deleteStop: async (id: string) => done(await run(supabase.from('stops').delete().eq('id', id))),
+    /** Removes the files of the stop's reservations first; the rows cascade with the stop. */
+    deleteStop: async (id: string, files: Attachment[] = []) => {
+      if (files.length) await run(supabase.storage.from('attachments').remove(files.map(f => f.storage_path)))
+      return done(await run(supabase.from('stops').delete().eq('id', id)))
+    },
 
     moveStop: async (id: string, dir: -1 | 1) => {
       for (const u of reorderPositions(getData().stops, id, dir)) {
@@ -64,7 +68,9 @@ export function createActions(tripId: string, getData: () => TripData, refresh: 
     },
 
     uploadAttachment: async (reservationId: string, file: File): Promise<Attachment> => {
-      const path = `${reservationId}/${crypto.randomUUID()}-${file.name}`
+      // Storage keys must be plain ASCII; the original name lives in the filename column.
+      const ext = /\.[a-z0-9]{1,8}$/i.exec(file.name)?.[0].toLowerCase() ?? ''
+      const path = `${reservationId}/${crypto.randomUUID()}${ext}`
       await run(supabase.storage.from('attachments').upload(path, file, { contentType: file.type || undefined }))
       const row = { reservation_id: reservationId, storage_path: path, filename: file.name, content_type: file.type || null }
       return done(await run(supabase.from('attachments').insert(row).select().single<Attachment>()))

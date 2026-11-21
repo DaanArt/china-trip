@@ -36,8 +36,11 @@ export function legKey(fromId: string | null, toId: string | null): string {
   return `${fromId ?? 'home'}->${toId ?? 'home'}`
 }
 
-function clampNights(n: number): number {
-  return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0
+/** A stay can't be longer than a year; caps typos like 1e8 that would freeze the app. */
+export const MAX_NIGHTS = 366
+
+export function clampNights(n: number): number {
+  return Number.isFinite(n) ? Math.min(MAX_NIGHTS, Math.max(0, Math.floor(n))) : 0
 }
 
 export function buildRoute(trip: Trip, stops: Stop[], legs: Leg[]): Route {
