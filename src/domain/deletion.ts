@@ -1,4 +1,4 @@
-import type { Attachment, Leg, Reservation, Stop } from './types'
+import type { Activity, Attachment, Leg, Reservation, Stop } from './types'
 
 /**
  * What deleting a stop would take with it. Journeys into or out of the stop
@@ -6,9 +6,9 @@ import type { Attachment, Leg, Reservation, Stop } from './types'
  * deleted or moved first (they may hold ticket numbers needed for refunds).
  */
 export function stopDeletionImpact(
-  data: { stops: Stop[]; legs: Leg[]; reservations: Reservation[]; attachments: Attachment[]; home: string },
+  data: { stops: Stop[]; legs: Leg[]; reservations: Reservation[]; attachments: Attachment[]; activities?: Activity[]; home: string },
   stopId: string,
-): { reservations: Reservation[]; files: Attachment[]; blockingJourneys: string[] } {
+): { reservations: Reservation[]; activities: Activity[]; files: Attachment[]; blockingJourneys: string[] } {
   const name = (id: string | null) => (id === null ? data.home : data.stops.find(s => s.id === id)?.name ?? '?')
   const touching = [
     ...data.legs.filter(l => l.to_stop_id === stopId), // journeys into the stop first
@@ -18,6 +18,9 @@ export function stopDeletionImpact(
     .filter(l => data.reservations.some(r => r.leg_id === l.id))
     .map(l => `${name(l.from_stop_id)} → ${name(l.to_stop_id)}`)
   const reservations = data.reservations.filter(r => r.stop_id === stopId)
-  const ids = new Set(reservations.map(r => r.id))
-  return { reservations, files: data.attachments.filter(a => ids.has(a.reservation_id)), blockingJourneys }
+  // Activities go with the stop, and so do their bookings and files.
+  const activities = (data.activities ?? []).filter(a => a.stop_id === stopId)
+  const activityIds = new Set(activities.map(a => a.id))
+  const ids = new Set([...reservations, ...data.reservations.filter(r => r.activity_id && activityIds.has(r.activity_id))].map(r => r.id))
+  return { reservations, activities, files: data.attachments.filter(a => ids.has(a.reservation_id)), blockingJourneys }
 }

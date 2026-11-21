@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { buildRoute, type Route } from '../domain/route'
 import { deriveTodos, type Todo } from '../domain/todos'
-import type { Attachment, Leg, Place, Profile, Reservation, Stop, Task, Trip, WishlistItem } from '../domain/types'
+import type { Activity, ActivityVote, Attachment, Leg, Place, Profile, Reservation, Stop, Task, Trip, WishlistItem } from '../domain/types'
 import { supabase } from '../lib/supabase'
 import { createActions, type Actions } from './actions'
 
@@ -15,6 +15,8 @@ export interface TripData {
   wishlist: WishlistItem[]
   profiles: Profile[]
   tasks: Task[]
+  activities: Activity[]
+  votes: ActivityVote[]
 }
 
 interface TripContext {
@@ -26,6 +28,7 @@ interface TripContext {
   refresh: () => Promise<void>
   nameOf: (userId: string | null) => string
   actions: Actions | null
+  me: string // signed-in user id
 }
 
 const Ctx = createContext<TripContext | null>(null)
@@ -37,7 +40,7 @@ async function rows<T>(table: string, order = 'created_at'): Promise<T[]> {
 }
 
 async function loadAll(): Promise<TripData> {
-  const [trips, stops, legs, reservations, attachments, places, wishlist, profiles, tasks] = await Promise.all([
+  const [trips, stops, legs, reservations, attachments, places, wishlist, profiles, tasks, activities, votes] = await Promise.all([
     rows<Trip>('trip', 'start_date'),
     rows<Stop>('stops'),
     rows<Leg>('legs'),
@@ -47,12 +50,14 @@ async function loadAll(): Promise<TripData> {
     rows<WishlistItem>('wishlist_items'),
     rows<Profile>('profiles', 'display_name'),
     rows<Task>('tasks'),
+    rows<Activity>('activities'),
+    rows<ActivityVote>('activity_votes', 'activity_id'),
   ])
   if (!trips[0]) throw new Error('No trip found')
-  return { trip: trips[0], stops, legs, reservations, attachments, places, wishlist, profiles, tasks }
+  return { trip: trips[0], stops, legs, reservations, attachments, places, wishlist, profiles, tasks, activities, votes }
 }
 
-export function TripDataProvider({ children }: { children: ReactNode }) {
+export function TripDataProvider({ children, userId }: { children: ReactNode; userId: string }) {
   const [data, setData] = useState<TripData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -111,7 +116,7 @@ export function TripDataProvider({ children }: { children: ReactNode }) {
   )
 
   return (
-    <Ctx.Provider value={{ data, route, todos, loading, error, refresh, nameOf, actions }}>
+    <Ctx.Provider value={{ data, route, todos, loading, error, refresh, nameOf, actions, me: userId }}>
       {children}
     </Ctx.Provider>
   )

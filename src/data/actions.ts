@@ -1,5 +1,5 @@
 import { nextPosition, reorderPositions } from '../domain/ordering'
-import type { Attachment, Leg, Place, Reservation, Stop, Task, WishlistItem } from '../domain/types'
+import type { Activity, Attachment, Leg, Place, Reservation, Stop, Task, WishlistItem } from '../domain/types'
 import { supabase } from '../lib/supabase'
 import type { TripData } from './TripDataProvider'
 
@@ -117,6 +117,28 @@ export function createActions(tripId: string, getData: () => TripData, refresh: 
     },
 
     deleteTask: async (id: string) => done(await run(supabase.from('tasks').delete().eq('id', id))),
+
+    addActivity: async (input: { stop_id: string; title: string; notes?: string | null }): Promise<Activity> =>
+      done(await run(supabase.from('activities').insert({ trip_id: tripId, ...input, title: input.title.trim() }).select().single<Activity>())),
+
+    updateActivity: async (id: string, patch: Partial<Activity>) =>
+      done(await run(supabase.from('activities').update(patch).eq('id', id))),
+
+    /** Removes the files of the activity's bookings first; the rows cascade. */
+    deleteActivity: async (id: string, files: Attachment[] = []) => {
+      if (files.length) await run(supabase.storage.from('attachments').remove(files.map(f => f.storage_path)))
+      return done(await run(supabase.from('activities').delete().eq('id', id)))
+    },
+
+    /** Sets the signed-in person's hearts (0 removes the vote). */
+    vote: async (activityId: string, hearts: number) => {
+      const { data } = await supabase.auth.getUser()
+      if (!data.user) throw new Error('Not signed in')
+      if (hearts <= 0) {
+        return done(await run(supabase.from('activity_votes').delete().eq('activity_id', activityId).eq('user_id', data.user.id)))
+      }
+      return done(await run(supabase.from('activity_votes').upsert({ activity_id: activityId, user_id: data.user.id, hearts }, { onConflict: 'activity_id,user_id' })))
+    },
 
     saveMyName: async (name: string) => {
       const { data } = await supabase.auth.getUser()

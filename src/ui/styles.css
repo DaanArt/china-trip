@@ -236,3 +236,18 @@ button.collapse {
 }
 button.collapse.suggestions { margin-top: 8px; }
 li.suggestion { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+
+li.task.editing { display: block; padding: 0; border: 0; box-shadow: none; background: none; }
+.task-actions { display: flex; gap: 2px; align-items: start; }
+/* Activities */
+.tabs.inner { padding: 0; margin: 4px 0 4px; }
+.activities { display: grid; gap: 10px; }
+article.activity { gap: 6px; }
+.activity .total { font-weight: 700; color: var(--red-dark); }
+.votes { display: grid; gap: 2px; }
+.vote-row { display: flex; align-items: center; gap: 4px; font-size: 13px; }
+.vote-row .who { min-width: 7em; font-weight: 600; }
+button.heart { border: 0; box-shadow: none; background: none; padding: 0 2px; font-size: 20px; line-height: 1; color: var(--red); }
+button.heart:hover:not(:disabled) { background: none; transform: scale(1.15); }
+.heart-static { color: var(--red); font-size: 18px; letter-spacing: 2px; }
+.activity a { color: var(--ink); font-weight: 600; word-break: break-all; }

@@ -32,3 +32,15 @@ test('a booked inbound flight blocks deleting the first stop', () => {
   const impact = stopDeletionImpact({ stops, legs: [...legs, inbound], reservations: [flight], attachments: [], home: 'Home' }, beijing.id)
   expect(impact.blockingJourneys).toEqual(['Home → Beijing'])
 })
+
+test("files of the stop's activity bookings are removed too", () => {
+  const { stops, legs, beijing } = standardTrip()
+  const activity = { id: 'act-1', trip_id: 'trip-1', stop_id: beijing.id, title: 'Opera', notes: null, created_by: null, created_at: '' }
+  const tickets = makeReservation({ kind: 'activity', activity_id: activity.id })
+  const impact = stopDeletionImpact(
+    { stops, legs, reservations: [tickets], attachments: [file(tickets.id)], activities: [activity], home: 'Home' },
+    beijing.id,
+  )
+  expect(impact.files.map(f => f.reservation_id)).toEqual([tickets.id])
+  expect(impact.activities).toEqual([activity])
+})

@@ -9,7 +9,7 @@ export function Root() {
   if (loading) return <p className="center muted">Loading…</p>
   if (!session) return <Login />
   return (
-    <TripDataProvider key={session.user.id}>
+    <TripDataProvider key={session.user.id} userId={session.user.id}>
       <Gate userId={session.user.id} />
     </TripDataProvider>
   )

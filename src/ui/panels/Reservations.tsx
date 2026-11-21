@@ -4,11 +4,11 @@ import { useTrip } from '../../data/TripDataProvider'
 import { formatDay } from '../../domain/dates'
 import { dateLabels, defaultDates } from '../../domain/reservationDefaults'
 import type { RouteLeg, RouteStop } from '../../domain/route'
-import type { Reservation, ReservationKind } from '../../domain/types'
+import type { Activity, Reservation, ReservationKind } from '../../domain/types'
 import { Attachments } from './Attachments'
 import { ReservationForm } from './ReservationForm'
 
-type Target = { stop: RouteStop } | { leg: RouteLeg }
+type Target = { stop: RouteStop } | { leg: RouteLeg } | { activity: Activity }
 
 const EMPTY: Omit<ReservationInput, 'kind'> = {
   title: '', confirmation: null, start_date: null, start_time: null, end_date: null, end_time: null,
@@ -27,14 +27,17 @@ export function Reservations({ target, allowAdd = true }: { target: Target; allo
   const [error, setError] = useState<string | null>(null)
   if (!data || !actions) return null
 
-  const isStop = 'stop' in target
-  const legRow = isStop ? null : target.leg.row
-  const list = data.reservations.filter(r => (isStop ? r.stop_id === target.stop.stop.id : legRow && r.leg_id === legRow.id))
-  const defaultKind: ReservationKind = isStop ? 'hotel' : 'transport'
+  const legRow = 'leg' in target ? target.leg.row : null
+  const list = data.reservations.filter(r =>
+    'stop' in target ? r.stop_id === target.stop.stop.id : 'activity' in target ? r.activity_id === target.activity.id : legRow && r.leg_id === legRow.id,
+  )
+  const defaultKind: ReservationKind = 'stop' in target ? 'hotel' : 'activity' in target ? 'activity' : 'transport'
+  const prefill = 'activity' in target ? { start_date: null, end_date: null } : defaultDates(defaultKind, target)
 
   async function create(input: ReservationInput) {
-    let ref: { stop_id: string } | { leg_id: string }
+    let ref: { stop_id: string } | { leg_id: string } | { activity_id: string }
     if ('stop' in target) ref = { stop_id: target.stop.stop.id }
+    else if ('activity' in target) ref = { activity_id: target.activity.id }
     else {
       const leg = target.leg.row ?? (await actions!.upsertLeg(target.leg.from?.id ?? null, target.leg.to?.id ?? null, {}))
       ref = { leg_id: leg.id }
@@ -84,7 +87,7 @@ export function Reservations({ target, allowAdd = true }: { target: Target; allo
       {list.length === 0 && editing !== 'new' && <p className="muted small">Nothing booked yet.</p>}
       {editing === 'new' ? (
         <ReservationFormFor
-          initial={{ ...EMPTY, kind: defaultKind, ...defaultDates(defaultKind, target) }}
+          initial={{ ...EMPTY, kind: defaultKind, ...prefill }}
           onCancel={() => setEditing(null)}
           onSave={create}
         />

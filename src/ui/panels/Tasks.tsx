@@ -11,20 +11,27 @@ function usePeople() {
   return (data?.profiles ?? []).filter(p => p.display_name !== 'Claude')
 }
 
-export function TaskForm({ stopId }: { stopId?: string }) {
+/** Adds a to-do, or edits one when `task` is given. */
+export function TaskForm({ stopId, task, onDone }: { stopId?: string; task?: Task; onDone?: () => void }) {
   const { route, actions } = useTrip()
   const people = usePeople()
-  const [text, setText] = useState('')
-  const [who, setWho] = useState<string[]>([])
-  const [stop, setStop] = useState(stopId ?? '')
-  const [due, setDue] = useState('')
+  const [text, setText] = useState(task?.text ?? '')
+  const [who, setWho] = useState<string[]>(task?.assignee_ids ?? [])
+  const [stop, setStop] = useState(task ? task.stop_id ?? '' : stopId ?? '')
+  const [due, setDue] = useState(task?.due_date ?? '')
   const [error, setError] = useState<string | null>(null)
 
   async function submit(e: FormEvent) {
     e.preventDefault()
     if (!text.trim()) return
+    const fields = { text: text.trim(), assignee_ids: who, stop_id: stop || null, due_date: due || null }
     try {
-      await actions!.addTask({ text, assignee_ids: who, stop_id: stop || null, due_date: due || null })
+      if (task) {
+        await actions!.updateTask(task.id, fields)
+        onDone?.()
+        return
+      }
+      await actions!.addTask(fields)
       setText('')
       setWho([])
       setDue('')
@@ -35,10 +42,11 @@ export function TaskForm({ stopId }: { stopId?: string }) {
   }
 
   return (
-    <form className="task-form" onSubmit={submit}>
+    <form className="task-form" aria-label={task ? 'Edit to-do' : 'Add a to-do'} onSubmit={submit}>
       <div className="row">
-        <input aria-label="New to-do" placeholder="Add a to-do…" value={text} onChange={e => setText(e.target.value)} />
-        <button type="submit" className="primary" disabled={!text.trim()}>Add to-do</button>
+        <input aria-label={task ? 'To-do' : 'New to-do'} placeholder="Add a to-do…" value={text} onChange={e => setText(e.target.value)} />
+        <button type="submit" className="primary" disabled={!text.trim()}>{task ? 'Save to-do' : 'Add to-do'}</button>
+        {task && <button type="button" className="link" onClick={onDone}>Cancel</button>}
       </div>
       <div className="row small">
         {people.map(p => (
@@ -47,7 +55,7 @@ export function TaskForm({ stopId }: { stopId?: string }) {
             {p.display_name}
           </label>
         ))}
-        {!stopId && (
+        {(!stopId || task) && (
           <label className="inline">
             Stop
             <select value={stop} onChange={e => setStop(e.target.value)}>
@@ -70,7 +78,15 @@ export function TaskItem({ task, onSelect }: { task: Task | OpenTask; onSelect: 
   const { data, actions, nameOf } = useTrip()
   const stop = data?.stops.find(s => s.id === task.stop_id)
   const overdue = 'overdue' in task && task.overdue
+  const [editing, setEditing] = useState(false)
   const remove = () => window.confirm(`Delete “${task.text}”?`) && actions?.deleteTask(task.id)
+  if (editing) {
+    return (
+      <li aria-label={task.text} className="task editing">
+        <TaskForm task={task} onDone={() => setEditing(false)} />
+      </li>
+    )
+  }
   return (
     <li aria-label={task.text} className={`task ${task.done ? 'done' : ''} ${overdue ? 'overdue' : ''}`}>
       <input type="checkbox" aria-label="Done" key={`d-${task.done}`} defaultChecked={task.done} onChange={e => actions?.updateTask(task.id, { done: e.target.checked })} />
@@ -83,7 +99,10 @@ export function TaskItem({ task, onSelect }: { task: Task | OpenTask; onSelect: 
           <span className="muted small">added by {nameOf(task.created_by)}</span>
         </span>
       </div>
-      <button className="link" aria-label={`Delete to-do ${task.text}`} onClick={remove}>✕</button>
+      <span className="task-actions">
+        <button className="link" onClick={() => setEditing(true)}>Edit</button>
+        <button className="link" aria-label={`Delete to-do ${task.text}`} onClick={remove}>✕</button>
+      </span>
     </li>
   )
 }
