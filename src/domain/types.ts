@@ -143,3 +143,15 @@ export interface ActivityVote {
   user_id: string
   hearts: number // 0-3
 }
+
+export interface Comment {
+  id: string
+  trip_id: string
+  wishlist_item_id: string | null
+  activity_id: string | null
+  task_id: string | null
+  body: string
+  created_by: string
+  created_at: string
+  edited_at: string | null
+}
