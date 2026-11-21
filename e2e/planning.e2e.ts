@@ -38,6 +38,7 @@ test('an idea pin becomes a new stop', async ({ page }) => {
   await page.getByRole('tab', { name: 'Wishlist' }).click()
   await page.getByRole('button', { name: `${PREFIX}Idea`, exact: true }).click()
   await page.getByRole('button', { name: 'Add as new stop' }).click()
+  await expect(page.getByRole('button', { name: 'Delete stop' })).toBeVisible() // the new stop has opened
   await page.getByRole('button', { name: 'Back' }).click()
   await page.getByRole('tab', { name: 'Route' }).click()
   await expect(page.getByRole('listitem', { name: `Stop ${PREFIX}Idea` })).toBeVisible()

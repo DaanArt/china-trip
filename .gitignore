@@ -30,3 +30,5 @@ supabase/.temp
 .superpowers/
 test-results/
 playwright-report/
+mockups/
+.env.test

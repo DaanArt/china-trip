@@ -1,18 +1,14 @@
-// The e2e tests run against the live Supabase project. Once the trip holds real
-// stops, running them would shift real dates while they run, so refuse unless
-// explicitly allowed. (Long term: point e2e at a separate test project.)
-import { db, PREFIX } from './helpers'
+// e2e must never touch the live trip: refuse any Supabase that isn't local,
+// then make sure the local test account exists.
+import { createClient } from '@supabase/supabase-js'
+import { CLAUDE } from './helpers'
 
 export default async function globalSetup() {
-  if (process.env.E2E_ALLOW_LIVE === '1') return
-  const client = await db()
-  const { data, error } = await client.from('stops').select('name')
-  if (error) throw new Error(`e2e guard could not read stops: ${error.message}`)
-  const real = (data ?? []).filter(s => !s.name.startsWith(PREFIX))
-  if (real.length) {
-    throw new Error(
-      `Refusing to run e2e: the live trip has ${real.length} real stop(s). ` +
-        'The tests would temporarily change real dates. Use a separate test project, or set E2E_ALLOW_LIVE=1 if you accept that.',
-    )
+  const url = process.env.VITE_SUPABASE_URL ?? ''
+  if (!/^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(url)) {
+    throw new Error(`e2e only runs against a local Supabase (got "${url}"). Start one with \`npx supabase start\`.`)
   }
+  const admin = createClient(url, process.env.SUPABASE_LOCAL_SERVICE_KEY!, { auth: { persistSession: false } })
+  const { error } = await admin.auth.admin.createUser({ ...CLAUDE, email_confirm: true })
+  if (error && !/already/i.test(error.message)) throw new Error(`local test user: ${error.message}`)
 }

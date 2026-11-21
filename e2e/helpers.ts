@@ -2,10 +2,12 @@ import { existsSync } from 'node:fs'
 import { expect, type Page } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
 
-process.loadEnvFile('.env')
-if (existsSync('.env.claude')) process.loadEnvFile('.env.claude')
+// e2e runs only against the local Supabase (npx supabase start); see global-setup.ts.
+if (!existsSync('.env.test')) throw new Error('Missing .env.test: run `npx supabase start` and see CLAUDE.md')
+process.loadEnvFile('.env.test')
 
-export const CLAUDE = { email: process.env.CLAUDE_EMAIL!, password: process.env.CLAUDE_PASSWORD! }
+/** Local-only test account, created by global-setup on the local stack. */
+export const CLAUDE = { email: 'claude@china-trip.invalid', password: 'local-e2e-only-password' }
 /** Every row an e2e test creates starts with this, so cleanup can find it. */
 export const PREFIX = 'E2E '
 

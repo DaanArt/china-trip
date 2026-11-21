@@ -1,16 +1,19 @@
 import { useEffect } from 'react'
-import { CircleMarker, MapContainer, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet'
+import { CircleMarker, GeoJSON, MapContainer, Marker, Polyline, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import type { LatLng } from '../../domain/geo'
 import { groupPlaces } from '../../domain/places'
 import type { Route } from '../../domain/route'
 import type { Place } from '../../domain/types'
 import type { MapMode, Selection } from '../selection'
+import { placePin, stopPin } from './pins'
+import { world } from './world'
 
-// Tiles: openstreetmap.de (free, keyless, not Google). Checked 2026-11-21 at
-// zoom 6 over Beijing: labels show Chinese plus a Latin-script name. CARTO now
-// needs an API key; standard OSM tiles show Chinese only.
-const TILES = 'https://tile.openstreetmap.de/{z}/{x}/{y}.png'
-const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+// The map is built in: low-detail outlines of China and the land around it
+// (Natural Earth, see world.ts) drawn on a CSS sea. No tile server, so nothing
+// to block in China and nothing to load offline.
+const INK = '#2f2f2f'
+const RED = '#e8343f'
+const BOUNDS: [[number, number], [number, number]] = [[0, 55], [60, 155]]
 
 interface Props {
   route: Route
@@ -41,8 +44,28 @@ export function TripMap({ route, places, selection, onSelect, mapMode, onMapClic
   const internal = route.legs.filter(l => l.from && l.to)
 
   return (
-    <MapContainer center={[35, 104]} zoom={4} className={`map ${mapMode ? 'picking' : ''}`} worldCopyJump>
-      <TileLayer url={TILES} attribution={ATTRIBUTION} maxZoom={18} />
+    <MapContainer
+      center={[35.5, 104.5]}
+      zoom={4.25}
+      zoomSnap={0.25}
+      minZoom={3.5}
+      maxZoom={8}
+      maxBounds={BOUNDS}
+      maxBoundsViscosity={0.8}
+      className={`map ${mapMode ? 'picking' : ''}`}
+      attributionControl
+    >
+      <GeoJSON
+        data={world.land}
+        interactive={false}
+        style={{ className: 'land-shape', color: '#c9b78e', weight: 1, fillColor: '#e6d6b0', fillOpacity: 1 }}
+      />
+      <GeoJSON
+        data={world.china}
+        interactive={false}
+        style={{ className: 'china-shape', color: INK, weight: 3, fillColor: '#fbf1d6', fillOpacity: 1, lineJoin: 'miter' }}
+        attribution="Map data: Natural Earth"
+      />
       <ClickHandler enabled={!!mapMode} onClick={onMapClick} />
 
       {internal.map(leg => {
@@ -54,61 +77,58 @@ export function TripMap({ route, places, selection, onSelect, mapMode, onMapClic
               [leg.from!.lat, leg.from!.lng],
               [leg.to!.lat, leg.to!.lng],
             ]}
-            pathOptions={{ color: selected ? '#c8102e' : '#5a5a66', weight: selected ? 5 : 3, dashArray: leg.overnight ? '6 8' : undefined }}
+            pathOptions={{
+              color: selected ? RED : INK,
+              weight: selected ? 6 : 4,
+              lineCap: 'round',
+              dashArray: leg.overnight ? '10 10' : '2 10',
+            }}
             eventHandlers={{ click: () => onSelect({ kind: 'leg', key: leg.key }) }}
           />
         )
       })}
 
-      {groupPlaces(places).visible.map(p => {
-        const selected = selection?.kind === 'place' && selection.id === p.id
-        const idea = !p.stop_id
-        return (
-          <CircleMarker
-            key={p.id}
-            center={[p.lat, p.lng]}
-            radius={selected ? 8 : 5}
-            pathOptions={{
-              color: '#1f5f8b',
-              weight: p.status === 'suggested' ? 2 : 1,
-              dashArray: p.status === 'suggested' ? '3 3' : undefined,
-              fillColor: '#1f5f8b',
-              fillOpacity: p.status === 'suggested' ? 0 : idea ? 0.35 : 0.9,
-            }}
-            eventHandlers={{ click: () => onSelect({ kind: 'place', id: p.id }) }}
-          >
-            <Tooltip direction="top">{p.name}{p.status === 'suggested' ? ' (suggested)' : idea ? ' (idea)' : ''}</Tooltip>
-          </CircleMarker>
-        )
-      })}
-
       {travelled.length > 1 && (
-        <Polyline positions={travelled.map(p => [p.lat, p.lng] as [number, number])} pathOptions={{ color: '#c8102e', weight: 6, opacity: 0.6 }} interactive={false} />
+        <Polyline positions={travelled.map(p => [p.lat, p.lng] as [number, number])} pathOptions={{ color: INK, weight: 5, opacity: 0.85 }} interactive={false} />
       )}
       <Follow marker={marker} />
+
+      {groupPlaces(places).visible.map(p => {
+        const selected = selection?.kind === 'place' && selection.id === p.id
+        const kind = p.status === 'suggested' ? 'suggested' : p.stop_id ? 'active' : 'idea'
+        return (
+          <Marker key={p.id} position={[p.lat, p.lng]} icon={placePin(kind, selected)} eventHandlers={{ click: () => onSelect({ kind: 'place', id: p.id }) }}>
+            <Tooltip direction="top" offset={[0, -22]} className="place-label">
+              {p.name}
+              {kind === 'suggested' ? ' (suggested)' : kind === 'idea' ? ' (idea)' : ''}
+            </Tooltip>
+          </Marker>
+        )
+      })}
 
       {route.stops.map(rs => {
         const selected = selection?.kind === 'stop' && selection.id === rs.stop.id
         return (
-          <CircleMarker
+          <Marker
             key={rs.stop.id}
-            center={[rs.stop.lat, rs.stop.lng]}
-            radius={selected ? 10 : 8}
-            pathOptions={{ color: '#fff', weight: 2, fillColor: '#c8102e', fillOpacity: 1 }}
+            position={[rs.stop.lat, rs.stop.lng]}
+            icon={stopPin(rs.index + 1, selected)}
+            zIndexOffset={1000}
             eventHandlers={{ click: () => onSelect({ kind: 'stop', id: rs.stop.id }) }}
           >
-            <Tooltip direction="top" offset={[0, -8]} permanent={route.stops.length <= 25}>
-              {rs.index + 1}. {rs.stop.name}
+            <Tooltip direction="right" offset={[12, -24]} permanent className="stop-label">
+              {rs.stop.name}
             </Tooltip>
-          </CircleMarker>
+          </Marker>
         )
       })}
+
       {marker && (
         <CircleMarker
           center={[marker.lat, marker.lng]}
-          radius={11}
+          radius={10}
           interactive={false}
-          pathOptions={{ className: 'timelapse-marker', color: '#1d1d1f', weight: 3, fillColor: '#ffc83d', fillOpacity: 1 }}
+          pathOptions={{ className: 'timelapse-marker', color: INK, weight: 3, fillColor: '#ffd23f', fillOpacity: 1 }}
         />
       )}
     </MapContainer>

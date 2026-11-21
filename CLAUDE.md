@@ -19,7 +19,7 @@ The check never changes stops, legs or reservations; the script refuses anything
 
 ## Tests
 - `npm test` — unit tests (domain logic in `src/domain/`).
-- `npm run e2e` — Playwright against the real project as the Claude account; it creates and deletes rows prefixed `E2E `.
+- `npm run e2e` — Playwright against a **local** Supabase only (never the live trip). First `npx supabase start` (Docker), then write `.env.test` from `npx supabase status -o json` (`VITE_SUPABASE_URL`=API_URL, `VITE_SUPABASE_ANON_KEY`=ANON_KEY, `SUPABASE_LOCAL_SERVICE_KEY`=SERVICE_ROLE_KEY; local defaults, gitignored). The global setup refuses any non-local URL and creates the local test user.
 - `npm run check-access` — strangers must see nothing; sign-ups must be off.
 
 ## Database changes

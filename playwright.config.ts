@@ -8,5 +8,6 @@ export default defineConfig({
   workers: 1,
   timeout: 30_000,
   use: { baseURL: 'http://localhost:5199/china-trip/', trace: 'retain-on-failure' },
-  webServer: { command: 'npx vite --port 5199 --strictPort', url: 'http://localhost:5199/china-trip/', reuseExistingServer: true },
+  // Test mode loads .env.test (local Supabase). Never reuse a server: it might point at the live project.
+  webServer: { command: 'npx vite --mode test --port 5199 --strictPort', url: 'http://localhost:5199/china-trip/', reuseExistingServer: false },
 })

@@ -84,11 +84,27 @@ test('a stop added elsewhere appears without reloading', async ({ page }) => {
   await expect(stopRow(page, `${PREFIX}Live`)).toBeVisible({ timeout: 10_000 })
 })
 
-test('the map loads OpenStreetMap tiles and never calls Google', async ({ page }) => {
+test('the map is built in: no tile servers, no Google', async ({ page }) => {
   const hosts: string[] = []
   page.on('request', r => hosts.push(new URL(r.url()).host))
   await login(page)
-  await expect(page.locator('.leaflet-tile-loaded').first()).toBeVisible()
-  expect(hosts).toContain('tile.openstreetmap.de')
-  expect(hosts.filter(h => /google|gstatic/.test(h))).toEqual([])
+  await expect(page.locator('path.china-shape').first()).toBeAttached()
+  await page.waitForTimeout(500)
+  expect(hosts.filter(h => /tile|openstreetmap|openfreemap|carto|google|gstatic/.test(h))).toEqual([])
+})
+
+test('stops show as numbered pins with their name', async ({ page }) => {
+  await addStopRows([`${PREFIX}Pinned`])
+  await login(page)
+  const pin = page.locator('.stop-pin').filter({ hasText: /^\d+$/ }).last()
+  await expect(pin).toBeVisible()
+  await expect(page.locator('.stop-label', { hasText: `${PREFIX}Pinned` })).toBeVisible()
+})
+
+test('idea pins use the lighter pin', async ({ page }) => {
+  const client = await db()
+  const { data: trip } = await client.from('trip').select('id').single()
+  await client.from('places').insert({ trip_id: trip!.id, name: `${PREFIX}Idea pin`, lat: 31, lng: 112, stop_id: null })
+  await login(page)
+  await expect(page.locator('.pin-idea').first()).toBeVisible()
 })
